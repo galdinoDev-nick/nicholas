@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Solicitar Orçamento — JP Soluções</title>
+    <style>
+        :root {
+            --blue-1:#0b63d8;
+            --muted:#f4f7fb;
+            --dark:#0b2035;
+        }
+        * { box-sizing:border-box }
+        body {
+            margin:0;
+            font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+            background:linear-gradient(180deg,var(--muted),#fff);
+            color:var(--dark);
+            -webkit-font-smoothing:antialiased;
+        }
+        .container {
+            max-width:760px;
+            margin:36px auto;
+            padding:20px;
+        }
+        h1 {
+            margin:0 0 12px;
+            font-size:22px;
+        }
+        form {
+            background:white;
+            padding:18px;
+            border-radius:10px;
+            box-shadow:0 6px 18px rgba(16,34,72,0.06);
+        }
+        label {
+            display:block;
+            font-weight:600;
+            margin:10px 0 6px;
+        }
+        input,textarea {
+            width:100%;
+            padding:10px;
+            border:1px solid #d8e6f7;
+            border-radius:8px;
+            font-size:14px;
+        }
+        textarea {
+            min-height:120px;
+            resize:vertical;
+        }
+        .actions {
+            display:flex;
+            gap:12px;
+            justify-content:flex-end;
+            margin-top:14px;
+        }
+        .btn {
+            background:var(--blue-1);
+            color:white;
+            padding:10px 14px;
+            border-radius:10px;
+            text-decoration:none;
+            border:none;
+            font-weight:700;
+            cursor:pointer;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn.alt {
+            background:transparent;
+            border:2px solid rgba(11,98,216,0.12);
+            color:var(--blue-1);
+        }
+        .status-message {
+            padding:10px;
+            border-radius:6px;
+            margin-top:12px;
+            display:none;
+            font-weight: 600;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Solicitar Orçamento</h1>
+        
+        <form id="Formulario">
+            <label>Nome completo *</label>
+            <input name="nome" required />
+
+            <label>Telefone *</label>
+            <input name="telefone" required placeholder="(27) 9xxxx-xxxx" />
+
+            <label>E‑mail</label>
+            <input name="email" type="email" placeholder="seu@exemplo.com" />
+
+            <label>Descreva o problema / serviço desejado *</label>
+            <textarea name="descricao" required></textarea>
+
+            <div class="actions">
+                <button class="btn alt" type="reset">Limpar</button>
+                <button class="btn" type="submit">Enviar Solicitação</button>
+            </div>
+        </form>
+
+        <div id="status-display" class="status-message"></div>
+    </div>
+
+    <script>
+        // Configurações
+        const URL_PLANILHA = "https://script.google.com/macros/s/AKfycbwOsEFDcmGNF_jdhFQnpOt0_HHvyaSIKJAcDb80lDw5oR9jAIdsLI_eyoWKxqCKFJas/exec";
+
+        // Seleção de elementos
+        const formulario = document.getElementById('Formulario');
+        const displayStatus = document.getElementById('status-display');
+        const btnEnviar = formulario.querySelector('button[type="submit"]');
+
+        /**
+         * Atualiza o status visual
+         */
+        function atualizarStatus(texto, corFundo, corTexto) {
+            displayStatus.textContent = texto;
+            displayStatus.style.background = corFundo;
+            displayStatus.style.color = corTexto;
+            displayStatus.style.display = 'block';
+        }
+
+        // Evento de envio
+        formulario.addEventListener('submit', function(evento) {
+            evento.preventDefault(); 
+
+            // 1. Feedback visual e trava do botão
+            btnEnviar.disabled = true;
+            btnEnviar.textContent = "Enviando...";
+            atualizarStatus("Enviando seu orçamento...", "#f0f0f0", "#333");
+
+            // 2. Preparação dos dados no formato que funcionou no teste
+            const dadosParaEnviar = new URLSearchParams(new FormData(formulario));
+
+            // 3. Envio Fetch
+            fetch(URL_PLANILHA, {
+                method: 'POST',
+                mode: 'no-cors', 
+                body: dadosParaEnviar
+            })
+            .then(() => {
+                // Sucesso
+                atualizarStatus("✅ Orçamento enviado com sucesso!", "#e6ffea", "#2e7d32");
+                formulario.reset(); 
+                
+                setTimeout(() => {
+                    displayStatus.style.display = 'none';
+                }, 5000);
+            })
+            .catch(erro => {
+                // Erro
+                atualizarStatus("❌ Erro ao enviar. Verifique sua conexão.", "#ffe6e6", "#c62828");
+                console.error("Erro detalhado:", erro);
+            })
+            .finally(() => {
+                // Destrava o botão
+                btnEnviar.disabled = false;
+                btnEnviar.textContent = "Enviar Solicitação";
+            });
+        });
+    </script>
+</body>
+</html>
